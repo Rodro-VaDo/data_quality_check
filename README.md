@@ -93,7 +93,6 @@ The tool detects issues such as:
 
 The tool generates an Excel file named like this:
 
-```text
 CALIDAD_PS_<period>_<input_filename>_<timestamp>.xlsx
 
 It includes three worksheets:
