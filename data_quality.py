@@ -5,6 +5,18 @@ Evalúa la completitud mínima y la coherencia lógica de los registros de un
 período en la base all_participants_service_families_data, hojas
 'participantes' y 'servicios'.
 
+Flujo
+------------------------------------------------------
+1. Diálogo de selección de período (mes o rango de meses).
+2. Selector de archivo Excel.
+3. Ventana de progreso mientras se ejecuta el pipeline.
+4. Excel de salida con tres pestañas:
+   - resumen_por_fila   : métricas a nivel de fila (N, %, completitud, lógica).
+   - resumen_por_celda  : métricas a nivel de celda/campo (celdas esperadas, vacías, %).
+   - casos_a_corregir   : guía operativa — PROGRAMA, DEPARTAMENTO, ID,
+                          PESTAÑA_ORIGEN, lista de FALTANTES y ERRORES_LOGICOS.
+                          ROJO = campos vacíos / NARANJA = solo errores lógicos.
+
 Campos mínimos evaluados
 ------------------------
 PARTICIPANTES (siempre):
@@ -47,16 +59,19 @@ Validaciones lógicas
 Secciones
 ---------
 1  Constantes de UI
-2  Diálogo de selección de período   ← idéntico a estadísticas_2025
-3  GUI de Progreso                   ← idéntico a estadísticas_2025
+2  Diálogo de selección de período   
+3  GUI de Progreso                  
 4  Carga y normalización
 5  Utilidades de texto y completitud
 6  Mapas de campos mínimos y constantes de validación lógica
 7  Completitud (máscaras de presencia)
 8  Validaciones lógicas
-9  Pipeline principal + resúmenes    ← estructura idéntica a estadísticas_2025
-10 Escritura del reporte             ← estructura idéntica a estadísticas_2025
-11 Punto de entrada (main)           ← idéntico a estadísticas_2025
+9  Pipeline principal + resúmenes    
+10 Escritura del reporte             
+11 Punto de entrada (main)           
+
+Autor : Rodrigo Vallejo Domínguez - Monitoreo y Evaluación - Aldeas Infantiles SOS Colombia
+Fecha : Marzo 2026
 """
 
 from __future__ import annotations
@@ -449,7 +464,7 @@ SERVICIO_FAMILIA_REGLAS: Dict[str, Dict] = {
     "DFE": {"prohibe_acogida": True,  "origen_solo_advertencia": False},
     "FFC": {"prohibe_acogida": False, "origen_solo_advertencia": True},
     "FLC": {"prohibe_acogida": False, "origen_solo_advertencia": True},
-    "SIL": {"prohibe_acogida": False, "origen_solo_advertencia": True},
+    "SIL": {"prohibe_acogida": False, "origen_solo_advertencia": False},
 }
 
 TIPO_ESPERADO_POR_GRUPO: Dict[str, Set[str]] = {
@@ -1315,10 +1330,12 @@ def run_checker(
     pestana_origen = pd.Series(
         [_origen(i) for i in merged.index], index=merged.index)
 
-    n_problemas = (
-        faltantes.apply(       lambda s: 0 if not s else len(str(s).split("; "))) +
-        errores_serie.apply(   lambda s: 0 if not s else len(str(s).split("; ")))
-    )
+    def _contar(serie):
+        return serie.apply(lambda s: 0 if not s else len(str(s).split("; ")))
+
+    n_campos_vacios   = _contar(faltantes)
+    n_errores_logicos = _contar(errores_serie)
+    n_problemas       = n_campos_vacios + n_errores_logicos
 
     # Columnas: misma estructura que estadísticas_2025, con ID_SERVICIO añadido
     casos_df = pd.DataFrame({
@@ -1337,6 +1354,8 @@ def run_checker(
         "PESTAÑA_ORIGEN":      pestana_origen,
         "OK_FILA":             ok_row.values,
         "N_PROBLEMAS":         n_problemas.values,
+        "N_CAMPOS_VACIOS":     n_campos_vacios.values,
+        "N_ERRORES_LOGICOS":   n_errores_logicos.values,
         "FALTANTES":           faltantes.values,
         "ERRORES_LOGICOS":     errores_serie.values,
         "ADVERTENCIAS":        advertencias_serie.values,
