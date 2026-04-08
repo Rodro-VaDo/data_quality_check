@@ -95,3 +95,47 @@ The tool generates an Excel file named like this:
 
 ```text
 CALIDAD_PS_<period>_<input_filename>_<timestamp>.xlsx
+
+It includes three worksheets:
+
+resumen_por_fila
+
+Row-level quality summary by program and department.
+
+resumen_por_celda
+
+Cell-level quality summary, including expected cells, missing values, and validity percentages.
+
+casos_a_corregir
+
+Operational correction guide listing the records with missing data, logical errors, and warnings.
+
+Color coding:
+
+Red: missing required data
+Orange: logical errors without missing required data
+
+## Installation
+
+Recommended Python version: 3.10+
+
+## Usage
+
+Run the script
+Select the month or date range to evaluate
+Select the Excel input file
+Wait for the processing to finish
+Review the generated Excel report
+
+## Notes
+
+The analysis period is based on service entry date
+The tool is intended for Excel files with a specific operational structure
+It does not modify the source data
+It reports issues for correction in the output file
+
+## Author
+
+Rodrigo Vallejo Domínguez
+Monitoring and Evaluation
+Aldeas Infantiles SOS Colombia
